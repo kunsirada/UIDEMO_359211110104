@@ -1,4 +1,10 @@
 package sample;
 
-public class Controller {
+import javafx.fxml.Initializable;
+
+public class Controller implements Initializable {
+    private LoginModel loginModel = new loginModel();
+
+
+
 }
