@@ -1,6 +1,8 @@
 package admin;
 
 import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXDatePicker;
+import com.jfoenix.controls.JFXTextField;
 import dbUtil.dbConnection;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -9,10 +11,15 @@ import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
+import sample.Main;
 
+import javax.swing.*;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -43,7 +50,25 @@ public class adminController implements Initializable {
     private TableColumn<StudentData, String> dobcolum;
 
     @FXML
-    private JFXButton searchText;
+    private JFXButton btnLoad;
+
+    @FXML
+    private TextField searchTxt;
+
+    @FXML
+    private JFXTextField txtID;
+
+    @FXML
+    private JFXTextField txtFirstName;
+
+    @FXML
+    private JFXTextField txtLastName;
+
+    @FXML
+    private JFXTextField txtEmail;
+
+    @FXML
+    private JFXDatePicker txtDOB;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -80,11 +105,12 @@ public class adminController implements Initializable {
                 new PropertyValueFactory<StudentData,String>("DOB"));
         this.studentTable.setItems(null);
         this.studentTable.setItems(this.data);
-//Filter Data in TableView
-        FilteredList <StudentData> filteredData =
+
+        //Filter Data in TableView
+        FilteredList<StudentData> filteredData =
                 new FilteredList<>(data, e -> true);
-        searchText.setOnKeyReleased(e -> {
-            searchText.textProperty().addListener(
+        searchTxt.setOnKeyReleased(e -> {
+            searchTxt.textProperty().addListener(
                     (observable, oldValue, newValue) -> {
                         filteredData.setPredicate(StudentData -> {
                             if (newValue == null || newValue.isEmpty()) {
@@ -110,124 +136,127 @@ public class adminController implements Initializable {
             studentTable.setItems(sortedData);
 
         });
-//add Data
-        @FXML
-        private void addStudent(ActionEvent event) {
-            String sqlInsert = "insert into user(id,firstName,lastName,email,DOB) values (?,?,?,?,?)";
-
-            try {
-                Connection conn = dbConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sqlInsert);
-                stmt.setString(1, this.ids.getText());
-                stmt.setString(2, this.fname.getText());
-                stmt.setString(3, this.lname.getText());
-                stmt.setString(4, this.emails.getText());
-                stmt.setString(5, this.dobs.getEditor().getText());
-
-                stmt.execute();
-                stmt.close();
-
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            loadStudentData(new ActionEvent());
-        }
-
-//clear form
-
-        @FXML
-        private  void clearFields(ActionEvent event){
-            this.ids.setText("");
-            this.fname.setText("");
-            this.lname.setText("");
-            this.emails.setText("");
-            this.dobs.setValue(null);
-        }
-//switch scene to login.fxml
-
-        @FXML
-        private void logOut(ActionEvent event) throws Exception {
-            ((Node)event.getSource()).getScene().getWindow().hide();
-            Stage primaryStage = new Stage();
-            Main m = new Main();
-            m.start(primaryStage);
-
-        }
-//Delete Data
-        @FXML
-        private void deleteRowFromTable(ActionEvent event)  {
-            // studenttable.getItems().removeAll(studenttable.getSelectionModel().getSelectedItem());
-            StudentData std = studenttable.getSelectionModel().getSelectedItem();
-            JOptionPane.showConfirmDialog(null, "Do you want to delete student ID: " + std.getID() + "");
-            if (std != null) {
-                String sql = "delete from user where id = ?";
-                try {
-                    Connection conn = dbConnection.getConnection();
-                    PreparedStatement statement = conn.prepareStatement(sql);
-                    statement.setString(1, std.getID());
-                    statement.executeUpdate();
-                    statement.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-
-            } else {
-                System.exit(1);
-            }
-            loadStudentData(new ActionEvent());
-        }
-//Edit Data
-        @FXML
-        private void editStudent(ActionEvent event){
-            StudentData std = studenttable.getSelectionModel().getSelectedItem();
-            if (std != null) {
-                ids.setText(std.getID());
-                //set textfiled to read only
-                ids.setDisable(true);
-                fname.setText(std.getFirstName());
-                lname.setText(std.getLastName());
-                emails.setText(std.getEmail());
-                dobs.getEditor().setText(std.getDOB());
-            } else {
-                System.exit(1);
-            }
-
-
-        }
-//Save Data
-        @FXML
-        private void saveStudent(ActionEvent event){
-            StudentData std = studenttable.getSelectionModel().getSelectedItem();
-            JOptionPane.showConfirmDialog(null, "Do you want to update student ID: " + std.getID() + "");
-            String sqlEdit = "update user set  firstName =?, lastName =?, email =?, DOB =? where id = ?";
-            try {
-                Connection conn = dbConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sqlEdit);
-
-                stmt.setString(1, this.fname.getText());
-                stmt.setString(2, this.lname.getText());
-                stmt.setString(3, this.emails.getText());
-                stmt.setString(4, this.dobs.getEditor().getText());
-                stmt.setString(5, std.getID());
-
-
-                stmt.executeUpdate();
-                stmt.close();
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            loadStudentData(new ActionEvent());
-
-        }
-
-
-
-
-
-
 
     }//loadStudentData
 
+    @FXML
+    private void addStudent(ActionEvent event){
+        String sqlInsert = "" +
+                "insert into student(ID,firstName," +
+                "lastName,email,DOB) values(?,?,?,?,?)";
+
+        try {
+            Connection conn = dbConnection.getConnection();
+            PreparedStatement pr = conn.prepareStatement(sqlInsert);
+            pr.setString(1,this.txtID.getText());
+            pr.setString(2,this.txtFirstName.getText());
+            pr.setString(3,this.txtLastName.getText());
+            pr.setString(4,this.txtEmail.getText());
+            pr.setString(5,this.txtDOB.getEditor().getText());
+
+            pr.execute();
+            pr.close();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        loadStudentData(new ActionEvent());
+    }//addStudent
+    @FXML
+    private void clearForm(ActionEvent event){
+        this.txtID.setText("");
+        this.txtFirstName.setText("");
+        this.txtLastName.setText("");
+        this.txtEmail.setText("");
+        this.txtDOB.setValue(null);
+
+    }//clearForm
+    @FXML
+    private void deleteStudent(ActionEvent event){
+        //get data from TableView
+        StudentData std = studentTable.getSelectionModel().getSelectedItem();
+        //DialogMessage
+        JOptionPane.showConfirmDialog(null,
+                "Do you want to delete student name: "
+                        + std.getFirstName() + " " + std.getLastname());
+        //delete
+        if (std != null) {
+            String sqlDelete = "delete from student where ID = ?";
+            try {
+                Connection conn = dbConnection.getConnection();
+                PreparedStatement pr = conn.prepareStatement(sqlDelete);
+                pr.setString(1, std.getId());
+                pr.executeUpdate();
+                pr.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.exit(1);
+        }
+        loadStudentData(new ActionEvent());
+
+    }//deleteStudent
+    @FXML
+    private void editStudent(ActionEvent event){
+        StudentData std = studentTable.getSelectionModel().getSelectedItem();
+        if (std != null) {
+            txtID.setText(std.getId());
+            //disable txtfiled to read only
+            txtID.setDisable(true);
+            txtFirstName.setText(std.getFirstName());
+            txtLastName.setText(std.getLastname());
+            txtEmail.setText(std.getEmail());
+            txtDOB.getEditor().setText(std.getDOB());
+        } else {
+            System.exit(1);
+        }
+
+    }//editStudent
+
+    @FXML
+    private void saveStudent(ActionEvent event){
+        StudentData std = studentTable.getSelectionModel().getSelectedItem();
+        //DialogMessage
+        JOptionPane.showConfirmDialog(null,
+                "Do you want to update student ID: "
+                        + std.getId());
+        String sqlUpdate = "update student set firstName = ?," +
+                "lastName = ?,email = ?, DOB = ? where ID = ?";
+        try {
+            Connection conn = dbConnection.getConnection();
+            PreparedStatement pr = conn.prepareStatement(sqlUpdate);
+            pr.setString(1,this.txtFirstName.getText());
+            pr.setString(2,this.txtLastName.getText());
+            pr.setString(3,this.txtEmail.getText());
+            pr.setString(4, this.txtDOB.getEditor().getText());
+            pr.setString(5,this.txtID.getText());
+
+            pr.executeUpdate();
+            pr.close();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        loadStudentData(new ActionEvent());
+
+
+    }//saveStudent
+    @FXML
+    private void logOut(ActionEvent event) throws Exception {
+        ((Node)event.getSource()).getScene().getWindow().hide();
+        Stage primaryStage = new Stage();
+        Main m = new Main();
+        m.start(primaryStage);
+
+    }//logOut
+
+    public void setBtnLoad(JFXButton btnLoad) {
+        this.btnLoad = btnLoad;
+    }
+
+    public JFXButton getBtnLoad() {
+        return btnLoad;
+    }
 }//class
